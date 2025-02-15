@@ -28,7 +28,7 @@
           </div>
   
           <div>
-            <label for="password_confirmation" class="block text-gray-600">password_confirmation</label>
+            <label for="password_confirmation" class="block text-gray-600">password confirmation</label>
             <input
               v-model="password_confirmation"
               type="password"
@@ -55,17 +55,22 @@
 
         <!-- Display error message -->
       <p v-if="errorMessage" class="text-center text-red-500 mt-4">{{ errorMessage }}</p>
+
+      <p v-if="didRegistered" class="text-center text-green-500 mt-4 text-xl">{{ username + " succesfully registered! Downloading your private key..." }}</p>
       </div>
     </div>
   </template>
   
   <script>
+import { ssrModuleExportsKey } from 'vite/module-runner';
+
   export default {
     data() {
       return {
         username: '',
         password: '',
         password_confirmation: '',
+        didRegistered: false,
         errorMessage: '', // for error feedback
       loading: false // to show loading state
       };
@@ -99,8 +104,16 @@
 
         if (response.ok) {
           // Handle successful registration
-          console.log('Registration successful!');
-          this.$router.push('/login'); // Redirect to login page after successful registration
+          if (data.validation) {
+            console.log('Registration successful!');
+            this.didRegistered = true;
+            this.downloadPrivateKey(data.public_key);
+            // Sleep for 5 sec
+            await new Promise(r => setTimeout(r, 5000));
+            this.$router.push('/login');
+          } else {
+            this.errorMessage = 'Username already taken.';
+          }
         } else {
           // Handle non-200 status codes (e.g., 400, 500)
           this.errorMessage = data.message || 'An error occurred. Please try again later.';
@@ -111,7 +124,25 @@
       } finally {
         this.loading = false;
       }
+    },
+    downloadPrivateKey(privateKeyData) {
+      // Step 3: Create a Blob object with the private key data
+      const blob = new Blob([privateKeyData], { type: 'application/octet-stream' });
+
+      // Create an anchor element
+      const link = document.createElement('a');
+
+      // Create a URL for the Blob and set it as the href attribute of the anchor
+      link.href = URL.createObjectURL(blob);
+      link.download = 'private.key'; // File name for the download
+
+      // Programmatically click the anchor to trigger the download
+      link.click();
+
+      // Optionally revoke the Object URL after the download
+      URL.revokeObjectURL(link.href);
     }
+
   }
   };
 </script>

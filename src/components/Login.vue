@@ -4,13 +4,13 @@
       <h2 class="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
       <form @submit.prevent="login" class="space-y-4">
         <div>
-          <label for="email" class="block text-gray-600">Email</label>
+          <label for="username" class="block text-gray-600">Username</label>
           <input
-            v-model="email"
+            v-model="username"
             type="text"
-            id="email"
+            id="username"
             class="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="Enter your email"
+            placeholder="Enter your username"
             required
           />
         </div>
@@ -52,7 +52,7 @@
 export default {
   data() {
     return {
-      email: '',
+      username: '',
       password: '',
       errorMessage: '', // for error feedback
       loading: false // to show loading state
@@ -63,7 +63,7 @@ export default {
       try {
         this.loading = true;
         this.errorMessage = ''; // clear previous error message
-
+        debugger;
         // Make the POST request to the login API
         const response = await fetch('http://localhost:8000/login', {
           method: 'POST',
@@ -71,7 +71,7 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            username: this.email,
+            username: this.username,
             password: this.password
           })
         });
@@ -81,10 +81,12 @@ export default {
 
         if (response.ok) {
           // Handle successful login
-          if (data.validation) {
+          if (data.token) {
+            sessionStorage.accessToken = data.token;
+            sessionStorage.accessTokenExpiration = data.expiration;
             console.log('Login successful!');
-            // Optionally redirect after successful login
-            this.$router.push('/register');
+            // Redirect after successful login
+            this.$router.push('/secrets');
           } else {
             this.errorMessage = 'Invalid credentials. Please try again.';
           }
