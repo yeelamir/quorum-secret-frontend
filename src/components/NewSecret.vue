@@ -8,57 +8,187 @@
           <circle cx="32" cy="38" r="2" fill="#000"/>
         </svg>
       </div>
-      <form @submit.prevent="saveSecret">
-        <label>Name: <input v-model="secret.name" type="text" class="input-box" /></label>
-        <label>Secret: <input v-model="secret.secret" type="text" class="input-box" /></label>
-        <label>Group Users: <button type="button" class="group-button">Select users</button></label>
-        <label>Quorum: <input v-model="secret.quorum" type="text" class="input-box" /></label>
-        <label>Comment: <input v-model="secret.comment" type="text" class="input-box" /></label>
-        <label>Starting Date: <input v-model="secret.startingDate" type="date" class="input-box" /></label>
-        <button type="submit" class="save-button">Save and share</button>
-      </form>
+      
+      <div class="form-group">
+        <label>Name:</label>
+        <input v-model="newSecret.name" class="input-field" />
+      </div>
+  
+      <div class="form-group">
+        <label>Secret:</label>
+        <input v-model="newSecret.secret" class="input-field" />
+      </div>
+  
+      <div class="form-group">
+        <label>Group Users:</label>
+        <div class="relative w-full max-w-lg border p-2 rounded-md flex flex-wrap items-center bg-gray-200">
+          <div v-for="user in selectedUsers" :key="user.Id" class="bg-gray-500 text-white px-2 py-1 rounded-full flex items-center mr-1 mb-1">
+            <span>{{ user.Username }}</span>
+            <button @click="removeUser(user.Id)" class="ml-1 text-white">&times;</button>
+          </div>
+          <input
+            ref="inputField"
+            v-model="searchQuery"
+            @input="fetchSuggestions"
+            @keydown.down.prevent="highlightNext"
+            @keydown.up.prevent="highlightPrev"
+            @keydown.enter.prevent="selectHighlighted"
+            @keydown.delete="handleBackspace"
+            placeholder="Search users..."
+            class="flex-grow min-w-[150px] p-1 outline-none bg-transparent"
+          />
+          <div v-if="filteredUsers.length && searchQuery.length >= 2" class="absolute left-0 top-full w-full bg-white border mt-1 rounded shadow-md z-10">
+            <ul>
+              <li
+                v-for="(user, index) in filteredUsers"
+                :key="user.Id"
+                @click="selectUser(user)"
+                :class="{ 'bg-gray-300': index === highlightedIndex }"
+                class="cursor-pointer px-4 py-2 hover:bg-gray-400"
+              >
+                {{ user.Username }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+  
+      <div class="form-group">
+        <label>Quorum:</label>
+        <input v-model="newSecret.quorum" class="input-field" />
+      </div>
+  
+      <div class="form-group">
+        <label>Comment:</label>
+        <input v-model="newSecret.comment" class="input-field" />
+      </div>
+  
+      <div class="form-group">
+        <label>Starting Date:</label>
+        <input v-model="newSecret.starting_date" type="date" class="input-field" />
+      </div>
+      
+      <button @click="saveSecret" class="save-button">Save and share</button>
     </div>
   </template>
   
   <script>
   import axios from 'axios';
+  import { ref, computed, onMounted, nextTick } from "vue";
+  
   export default {
-    data() {
-      return {
-        secret: {
-          name: '',
-          secret: '',
-          quorum: '',
-          comment: '',
-          startingDate: ''
-        }
-      };
-    },
-    methods: {
-      async saveSecret() {
+    setup() {
+      const newSecret = ref({
+        name: "",
+        secret: "",
+        quorum: "",
+        comment: "",
+        starting_date: "",
+        group_users: []
+      });
+  
+      const users = ref([]);
+      const selectedUsers = ref([]);
+      const searchQuery = ref("");
+      const highlightedIndex = ref(-1);
+      const inputField = ref(null);
+  
+      const fetchUsers = async () => {
         try {
           const token = sessionStorage.getItem('accessToken');
-          await axios.post('http://localhost:8000/secrets', this.secret, {
+          const response = await axios.get('http://localhost:8000/users', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          this.$router.push('/');
+          users.value = response.data;
         } catch (error) {
-          console.error('Error saving secret:', error);
+          console.error("Error fetching users:", error);
         }
-      }
+      };
+  
+      onMounted(fetchUsers);
+  
+      const filteredUsers = computed(() =>
+        searchQuery.value.length >= 2
+          ? users.value.filter(
+              (user) =>
+                user.Username.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
+                !selectedUsers.value.some((selected) => selected.Id === user.Id)
+            )
+          : []
+      );
+  
+      const selectUser = (user) => {
+        if (!selectedUsers.value.find((u) => u.Id === user.Id)) {
+          selectedUsers.value.push(user);
+        }
+        searchQuery.value = "";
+        highlightedIndex.value = -1;
+        nextTick(() => inputField.value?.focus());
+      };
+  
+      const removeUser = (userId) => {
+        selectedUsers.value = selectedUsers.value.filter((user) => user.Id !== userId);
+      };
+  
+      const handleBackspace = (event) => {
+        if (!searchQuery.value && selectedUsers.value.length && event.key === "Backspace") {
+          selectedUsers.value.pop();
+        }
+      };
+  
+      const highlightNext = () => {
+        if (highlightedIndex.value < filteredUsers.value.length - 1) {
+          highlightedIndex.value++;
+        }
+      };
+  
+      const highlightPrev = () => {
+        if (highlightedIndex.value > 0) {
+          highlightedIndex.value--;
+        }
+      };
+  
+      const selectHighlighted = () => {
+        if (highlightedIndex.value !== -1) {
+          selectUser(filteredUsers.value[highlightedIndex.value]);
+        }
+      };
+  
+      const saveSecret = async () => {
+        try {
+          const token = sessionStorage.getItem('accessToken');
+          await axios.post('http://localhost:8000/secrets', {
+            ...newSecret.value,
+            group_users: selectedUsers.value.map(user => user.Id)
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (error) {
+          console.error("Error saving secret:", error);
+        }
+      };
+  
+      return {
+        newSecret,
+        selectedUsers,
+        searchQuery,
+        filteredUsers,
+        inputField,
+        highlightedIndex,
+        fetchUsers,
+        selectUser,
+        removeUser,
+        handleBackspace,
+        highlightNext,
+        highlightPrev,
+        selectHighlighted,
+        saveSecret
+      };
     }
   };
   </script>
   
   <style>
-  .container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    background-color: #f8f8f0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
   .title {
     font-size: 24px;
     font-weight: bold;
@@ -70,29 +200,27 @@
     height: auto;
     margin-bottom: 20px;
   }
-  form {
-    display: flex;
-    flex-direction: column;
-    width: 300px;
-  }
   label {
     margin-bottom: 10px;
     font-weight: bold;
   }
-  .input-box {
+  .container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  .input-field {
     width: 100%;
     padding: 8px;
+    border: 1px solid #5c5c5c;
     border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: #d4e6c3;
-  }
-  .group-button {
-    padding: 8px;
-    background-color: #5c5c5c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    background-color: #d7e3c3;
   }
   .save-button {
     padding: 10px;
@@ -108,3 +236,4 @@
   }
   </style>
   
+ 
