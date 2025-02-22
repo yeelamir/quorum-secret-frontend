@@ -1,49 +1,32 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="w-full max-w-sm p-6 bg-white rounded-lg shadow-lg">
-      <h2 class="text-2xl font-semibold text-center text-gray-700 mb-6">Login</h2>
-      <form @submit.prevent="login" class="space-y-4">
-        <div>
-          <label for="username" class="block text-gray-600">Username</label>
-          <input
+  <div class="auth-page">
+    <div class="auth-container">
+      <div class="auth-form">
+        <h3>Login</h3>
+        <form @submit.prevent="login">
+          <input 
             v-model="username"
             type="text"
             id="username"
-            class="w-full p-3 border border-gray-300 rounded-lg"
             placeholder="Enter your username"
             required
           />
-        </div>
-
-        <div>
-          <label for="password" class="block text-gray-600">Password</label>
-          <input
+          <input 
             v-model="password"
             type="password"
             id="password"
-            class="w-full p-3 border border-gray-300 rounded-lg"
             placeholder="Enter your password"
             required
           />
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            :disabled="loading"
-          >
-            Login
-          </button>
-        </div>
-
-        <p class="text-center text-gray-600">
-          Don't have an account? <router-link to="/register" class="text-blue-500">Register</router-link>
+          <button :disabled="loading">Login</button>
+        </form>
+        
+        <p class="text-center">
+          Don't have an account? <router-link to="/register" class="link">Register</router-link>
         </p>
-      </form>
-
-      <!-- Display error message -->
-      <p v-if="errorMessage" class="text-center text-red-500 mt-4">{{ errorMessage }}</p>
+        
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -54,45 +37,31 @@ export default {
     return {
       username: '',
       password: '',
-      errorMessage: '', // for error feedback
-      loading: false // to show loading state
+      errorMessage: '',
+      loading: false
     };
   },
   methods: {
     async login() {
       try {
         this.loading = true;
-        this.errorMessage = ''; // clear previous error message
-        debugger;
-        // Make the POST request to the login API
+        this.errorMessage = '';
+
         const response = await fetch('http://localhost:8000/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: this.username, password: this.password })
         });
 
-        // Parse the response as JSON
         const data = await response.json();
 
-        if (response.ok) {
-          // Handle successful login
-          if (data.token) {
-            sessionStorage.accessToken = data.token;
-            sessionStorage.accessTokenExpiration = data.expiration;
-            console.log('Login successful!');
-            // Redirect after successful login
-            this.$router.push('/secrets');
-          } else {
-            this.errorMessage = 'Invalid credentials. Please try again.';
-          }
+        if (response.ok && data.token) {
+          sessionStorage.accessToken = data.token;
+          sessionStorage.accessTokenExpiration = data.expiration;
+          console.log('Login successful!');
+          this.$router.push('/secrets');
         } else {
-          // Handle non-200 status codes (e.g., 400, 500)
-          this.errorMessage = 'An error occurred. Please try again later.';
+          this.errorMessage = 'Invalid credentials. Please try again.';
         }
       } catch (error) {
         this.errorMessage = 'An error occurred. Please try again later.';
@@ -106,5 +75,57 @@ export default {
 </script>
 
 <style scoped>
-/* You can add any additional styles here */
+.auth-page {
+  background: url('@/assets/background.png') no-repeat center center;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-container {
+  background: white;
+  width: 400px;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.auth-form {
+  padding: 20px;
+  text-align: center;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 12px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  background: #333;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+
+.link {
+  color: blue;
+  text-decoration: none;
+}
 </style>

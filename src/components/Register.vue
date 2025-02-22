@@ -1,83 +1,54 @@
 <template>
-    <div class="min-h-screen flex items-center justify-center bg-gray-100">
-      <div class="w-full max-w-sm p-6 bg-white rounded-lg shadow-lg">
-        <h2 class="text-2xl font-semibold text-center text-gray-700 mb-6">Register</h2>
-        <form @submit.prevent="register" class="space-y-4">
-          <div>
-            <label for="username" class="block text-gray-600">username</label>
-            <input
-              v-model="username"
-              type="text"
-              id="username"
-              class="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="Enter your username"
-              required
-            />
-          </div>
-  
-          <div>
-            <label for="password" class="block text-gray-600">password</label>
-            <input
-              v-model="password"
-              type="password"
-              id="password"
-              class="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-  
-          <div>
-            <label for="password_confirmation" class="block text-gray-600">password confirmation</label>
-            <input
-              v-model="password_confirmation"
-              type="password"
-              id="password_confirmation"
-              class="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-  
-          <div>
-            <button
-              type="submit"
-              class="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
-            >
-              Register
-            </button>
-          </div>
-  
-          <p class="text-center text-gray-600">
-            Already have an account? <router-link to="/login" class="text-blue-500">Login</router-link>
-          </p>
+  <div class="auth-page">
+    <div class="auth-container">
+      <div class="auth-form">
+        <h3>Register</h3>
+        <form @submit.prevent="register">
+          <input 
+            v-model="username"
+            type="text"
+            id="username"
+            placeholder="Enter your username"
+            required
+          />
+          <input 
+            v-model="password"
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            required
+          />
+          <input 
+            v-model="password_confirmation"
+            type="password"
+            id="password_confirmation"
+            placeholder="Confirm your password"
+            required
+          />
+          <button>Register</button>
         </form>
-
-        <!-- Display error message -->
-      <p v-if="errorMessage" class="text-center text-red-500 mt-4">{{ errorMessage }}</p>
-
-      <p v-if="didRegistered" class="text-center text-green-500 mt-4 text-xl">{{ username + " succesfully registered! Downloading your private key..." }}</p>
+        
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+        <p v-if="didRegistered" class="success-message">{{ username + " successfully registered! Downloading your private key..." }}</p>
       </div>
     </div>
-  </template>
-  
-  <script>
-import { ssrModuleExportsKey } from 'vite/module-runner';
+  </div>
+</template>
 
-  export default {
-    data() {
-      return {
-        username: '',
-        password: '',
-        password_confirmation: '',
-        didRegistered: false,
-        errorMessage: '', // for error feedback
-      loading: false // to show loading state
-      };
-    },
-    methods: {
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      password: '',
+      password_confirmation: '',
+      didRegistered: false,
+      errorMessage: '',
+      loading: false
+    };
+  },
+  methods: {
     async register() {
-      // Check if passwords match
       if (this.password !== this.password_confirmation) {
         this.errorMessage = 'Passwords do not match. Please try again.';
         return;
@@ -85,37 +56,27 @@ import { ssrModuleExportsKey } from 'vite/module-runner';
 
       try {
         this.loading = true;
-        this.errorMessage = ''; // clear previous error message
+        this.errorMessage = '';
 
-        // Make the POST request to the registration API
-        const response = await fetch('http://localhost:8000/register', { // Correct API endpoint
+        const response = await fetch('http://localhost:8000/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: this.username, password: this.password })
         });
 
-        // Parse the response as JSON
         const data = await response.json();
 
         if (response.ok) {
-          // Handle successful registration
           if (data.validation) {
             console.log('Registration successful!');
             this.didRegistered = true;
             this.downloadPrivateKey(data.public_key);
-            // Sleep for 5 sec
             await new Promise(r => setTimeout(r, 5000));
             this.$router.push('/login');
           } else {
             this.errorMessage = 'Username already taken.';
           }
         } else {
-          // Handle non-200 status codes (e.g., 400, 500)
           this.errorMessage = data.message || 'An error occurred. Please try again later.';
         }
       } catch (error) {
@@ -126,28 +87,72 @@ import { ssrModuleExportsKey } from 'vite/module-runner';
       }
     },
     downloadPrivateKey(privateKeyData) {
-      // Step 3: Create a Blob object with the private key data
       const blob = new Blob([privateKeyData], { type: 'application/octet-stream' });
-
-      // Create an anchor element
       const link = document.createElement('a');
-
-      // Create a URL for the Blob and set it as the href attribute of the anchor
       link.href = URL.createObjectURL(blob);
-      link.download = 'private.key'; // File name for the download
-
-      // Programmatically click the anchor to trigger the download
+      link.download = 'private.key';
       link.click();
-
-      // Optionally revoke the Object URL after the download
       URL.revokeObjectURL(link.href);
     }
-
   }
-  };
+};
 </script>
 
 <style scoped>
-/* You can add any additional styles here */
+.auth-page {
+  background: url('@/assets/background.png') no-repeat center center;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-container {
+  background: white;
+  width: 400px;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.auth-form {
+  padding: 20px;
+  text-align: center;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 12px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  background: #333;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+
+.success-message {
+  color: green;
+  margin-top: 10px;
+  font-size: 1.2em;
+}
 </style>
+
   
