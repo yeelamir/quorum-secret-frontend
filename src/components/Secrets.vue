@@ -31,20 +31,32 @@
       };
     },
     computed: {
-      categorizedSecrets() {
+    categorizedSecrets() {
         const categories = {
-          "My Own Secrets": [],
-          "Opened Secrets": [],
-          "Other Secrets": []
+        "My Own Secrets": [],
+        "Opened Secrets": [],
+        "Other Secrets": []
         };
-        return this.secrets.filter(secret => 
-          secret.Name.toLowerCase().includes(this.searchQuery.toLowerCase())
-        ).reduce((acc, secret) => {
-          if (secret.IsOwner === true) acc['My Own Secrets'].push(secret);
-          else acc['Other Secrets'].push(secret);
-          return acc;
-        }, categories);
-      }
+
+        this.secrets.forEach(secret => {
+        if (secret.IsOwner) {
+            categories["My Own Secrets"].push(secret);
+        } else if (secret.NDecryptRequest >= secret.quorum) {
+            categories["Opened Secrets"].push(secret);
+        } else {
+            categories["Other Secrets"].push(secret);
+        }
+        });
+
+        return Object.fromEntries(
+        Object.entries(categories).map(([key, secrets]) => [
+            key,
+            secrets.filter(secret =>
+            secret.Name.toLowerCase().includes(this.searchQuery.toLowerCase())
+            )
+        ])
+        );
+    }
     },
     methods: {
       async fetchSecrets() {

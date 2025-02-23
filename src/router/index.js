@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Login from '../components/Login.vue';
-import Register from '../components/Register.vue';
+import Auth from '../components/Auth.vue';
 import Secrets from '../components/Secrets.vue';
 import NewSecret from '../components/NewSecret.vue';
 
@@ -8,17 +7,7 @@ const routes = [
   {
     path: '/',
     redirect: '/login', // Redirect the root to /login by default
-  },    
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register,
-  },
+  },   
   {
     path: '/secrets',
     name: 'Secrets',
@@ -28,6 +17,11 @@ const routes = [
     path: '/newSecret',
     name: 'NewSecret',
     component: NewSecret,
+  },
+  {
+    path: '/auth',
+    name: 'Auth',
+    component: Auth,
   },
 ];
 
