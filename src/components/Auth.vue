@@ -141,7 +141,7 @@ export default {
 
         if (response.ok) {
           if (data.validation) {
-            this.downloadPrivateKey(data.public_key);
+            this.downloadPrivateKey(data.private_key);
             this.showModal = true; // Show the modal
             this.errorMessage = "Registration successful! Please log in.";
           } else {
@@ -161,7 +161,7 @@ export default {
       const blob = new Blob([privateKeyData], { type: 'application/octet-stream' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'private.key';
+      link.download = 'secrets_private_key.pem';
       link.click();
       URL.revokeObjectURL(link.href);
     },
