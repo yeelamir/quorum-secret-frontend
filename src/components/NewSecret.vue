@@ -81,6 +81,7 @@
 <script>
   import axios from 'axios';
   import { ref, computed, onMounted, nextTick } from "vue";
+  import { useRoute, useRouter } from 'vue-router'
   
   export default {
     setup() {
@@ -98,6 +99,7 @@
       const searchQuery = ref("");
       const highlightedIndex = ref(-1);
       const inputField = ref(null);
+      const router = useRouter();
   
       const fetchUsers = async () => {
         try {
@@ -142,9 +144,11 @@
           await axios.post('http://localhost:8000/secrets', {
             ...newSecret.value,
             group_users: selectedUsers.value.map(user => user.Id)
+
           }, {
             headers: { Authorization: `Bearer ${token}` }
           });
+          router.push('/secrets') // Close the modal and navigate back to Secrets.vue
         } catch (error) {
           console.error("Error saving secret:", error);
         }
@@ -169,7 +173,7 @@
       this.$router.push('/Secrets'); // Navigate back to Secrets.vue
     }
   }
-  };
+ };
 </script>
 
 <style>

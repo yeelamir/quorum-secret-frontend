@@ -3,16 +3,23 @@ import Auth from '../components/Auth.vue';
 import Secrets from '../components/Secrets.vue';
 import NewSecret from '../components/NewSecret.vue';
 import EditSecret from '../components/EditSecret.vue';
+import SecretDetails from '@/components/SecretDetails.vue';
 
 const routes = [
   {
     path: '/',
-    redirect: '/login', // Redirect the root to /login by default
-  },   
+    redirect: '/auth', // Redirect the root to /login by default
+  },
   {
     path: '/secrets',
     name: 'Secrets',
     component: Secrets,
+  },
+  {
+    path: '/SecretDetails/:secretId',
+    name: 'SecretDetails',
+    component: SecretDetails,
+    props: true, // Pass route params as props to the component
   },
   {
     path: '/newSecret',

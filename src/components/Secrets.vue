@@ -11,7 +11,7 @@
       <div v-for="(group, title) in categorizedSecrets" :key="title" class="secrets-group">
         <h2 class="group-title">{{ title }}</h2>
         <div class="secrets-list">
-          <div v-for="secret in group" :key="secret.id" class="secret-item" @click="viewSecret(secret.id)">
+          <div v-for="secret in group" :key="secret.id" class="secret-item" @click="viewSecret(secret.SecretId)">
             {{ secret.Name }}
           </div>
         </div>
