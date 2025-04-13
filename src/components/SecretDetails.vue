@@ -86,9 +86,62 @@
     secret.value.DecryptRequest = true
   }
   
-  const revealSecret = () => {
-    secretContent.value = secret.value.EncryptedSecret || secret.value.SecretShare
-  }
+  const revealSecret = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pem';
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const privateKey = e.target.result;
+          const token = sessionStorage.getItem('accessToken');
+          try {
+            const { data } = await axios.post(
+              `http://localhost:8000/secrets/secret_content/${secret.value.SecretId}`,
+              { private_key: privateKey },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            showDialog(data);
+          } catch (error) {
+            console.error('Error revealing secret:', error);
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  const showDialog = (content) => {
+    const dialog = document.createElement('div');
+    dialog.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+    dialog.innerHTML = `
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+        <h3 class="text-lg font-semibold mb-4">Secret Content</h3>
+        <textarea readonly class="w-full p-2 border rounded bg-gray-100 text-gray-800 font-mono break-words" rows="6">${content}</textarea>
+        <div class="flex justify-end mt-4">
+          <button id="copyButton" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded mr-2">Copy</button>
+          <button id="closeButton" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    const copyButton = dialog.querySelector('#copyButton');
+    const closeButton = dialog.querySelector('#closeButton');
+
+    copyButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(content).then(() => {
+        alert('Content copied to clipboard!');
+      });
+    });
+
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(dialog);
+    });
+  };
   
   const deleteSecret = async () => {
     const token = sessionStorage.getItem('accessToken')

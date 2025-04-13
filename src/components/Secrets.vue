@@ -37,11 +37,11 @@
         "Opened Secrets": [],
         "Other Secrets": []
         };
-
+        
         this.secrets.forEach(secret => {
         if (secret.IsOwner) {
             categories["My Own Secrets"].push(secret);
-        } else if (secret.NDecryptRequest >= secret.quorum) {
+        } else if (secret.NDecryptRequest >= secret.Quorum) {
             categories["Opened Secrets"].push(secret);
         } else {
             categories["Other Secrets"].push(secret);
