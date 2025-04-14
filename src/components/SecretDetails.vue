@@ -42,10 +42,10 @@
             <button @click="revealSecret" class="bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded">Reveal Secret</button>
             <button @click="deleteSecret" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">Delete Secret</button>
           </template>
-          <template v-else-if="!secret.EncryptedSecret">
-            <button @click="sendRequest" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Send Request</button>
-          </template>
-          <template v-else>
+          <template v-else-if="!secret.EncryptedSecret && !secret.DecryptRequest">
+                <button @click="sendRequest" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">Send Request</button>
+          </template>    
+          <template v-else-if="secret.EncryptedSecret">
             <button @click="revealSecret" class="bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded">Reveal Secret</button>
           </template>
         </div>
@@ -79,11 +79,31 @@
   })
   
   const sendRequest = async () => {
-    const token = sessionStorage.getItem('accessToken')
-    await axios.post(`http://localhost:8000/secrets/${secret.value.SecretId}/decrypt`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    secret.value.DecryptRequest = true
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pem';
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const privateKey = e.target.result;
+          const token = sessionStorage.getItem('accessToken');
+          try {
+            const { data } = await axios.patch(
+              `http://localhost:8000/secrets/set_decrypt_request/${secret.value.SecretId}`,
+              { private_key: privateKey },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            location.reload();
+          } catch (error) {
+            console.error('Error revealing secret:', error);
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   }
   
   const revealSecret = async () => {
