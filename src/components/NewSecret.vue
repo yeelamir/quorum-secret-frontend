@@ -177,6 +177,15 @@
 </script>
 
 <style>
+  
+  .min-h-screen {
+    background: url('@/assets/background.png') no-repeat center center;
+    background-size: cover;
+    height: 120vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
     .close-button {
         position: absolute;
         top: 10px;
