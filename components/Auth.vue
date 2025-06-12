@@ -83,7 +83,6 @@
 </template>
 
 <script>
-import { API_HOST } from './constants';
 export default {
   data() {
     return {
@@ -102,7 +101,7 @@ export default {
         this.loading = true;
         this.errorMessage = '';
 
-        const response = await fetch(API_HOST + 'login', {
+        const response = await fetch('http://localhost:8000/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: this.username, password: this.password })
@@ -132,7 +131,7 @@ export default {
         this.loading = true;
         this.errorMessage = '';
 
-        const response = await fetch(API_HOST + 'register', {
+        const response = await fetch('http://localhost:8000/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: this.username, password: this.password })

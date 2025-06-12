@@ -22,7 +22,6 @@
   </template>
   
   <script>
-  import { API_HOST } from './constants';
   import axios from 'axios';
   export default {
     data() {
@@ -63,7 +62,7 @@
       async fetchSecrets() {
         try {
           const token = sessionStorage.getItem('accessToken');
-          const response = await axios.get(API_HOST+'secrets', {
+          const response = await axios.get('http://localhost:8000/secrets', {
             headers: { Authorization: `Bearer ${token}` }
           });
           this.secrets = response.data;

@@ -79,7 +79,6 @@
 </template>
   
 <script>
-  import { API_HOST } from './constants';
   import axios from 'axios';
   import { ref, computed, onMounted, nextTick } from "vue";
   import { useRoute, useRouter } from 'vue-router'
@@ -105,7 +104,7 @@
       const fetchUsers = async () => {
         try {
           const token = sessionStorage.getItem('accessToken');
-          const response = await axios.get(API_HOST + 'users', {
+          const response = await axios.get('http://localhost:8000/users', {
             headers: { Authorization: `Bearer ${token}` }
           });
           users.value = response.data;
@@ -142,7 +141,7 @@
       const saveSecret = async () => {
         try {
           const token = sessionStorage.getItem('accessToken');
-          await axios.post(API_HOST + 'secrets', {
+          await axios.post('http://localhost:8000/secrets', {
             ...newSecret.value,
             group_users: selectedUsers.value.map(user => user.Id)
 

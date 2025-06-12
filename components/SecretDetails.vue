@@ -59,7 +59,6 @@
   </template>
   
   <script setup>
-  import { API_HOST } from './constants';
   import { ref, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import axios from 'axios'
@@ -73,7 +72,7 @@
   
   onMounted(async () => {
     const token = sessionStorage.getItem('accessToken')
-    const { data } = await axios.get(API_HOST + `secrets/${route.params.secretId}`, {
+    const { data } = await axios.get(`http://localhost:8000/secrets/${route.params.secretId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     secret.value = data
@@ -92,7 +91,7 @@
           const token = sessionStorage.getItem('accessToken');
           try {
             const { data } = await axios.patch(
-              API_HOST + `secrets/set_decrypt_request/${secret.value.SecretId}`,
+              `http://localhost:8000/secrets/set_decrypt_request/${secret.value.SecretId}`,
               { private_key: privateKey },
               { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -120,7 +119,7 @@
           const token = sessionStorage.getItem('accessToken');
           try {
             const { data } = await axios.post(
-              API_HOST + `secrets/secret_content/${secret.value.SecretId}`,
+              `http://localhost:8000/secrets/secret_content/${secret.value.SecretId}`,
               { private_key: privateKey },
               { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -166,7 +165,7 @@
   
   const deleteSecret = async () => {
     const token = sessionStorage.getItem('accessToken')
-    await axios.delete(API_HOST + `secrets/${secret.value.SecretId}`, {
+    await axios.delete(`http://localhost:8000/secrets/${secret.value.SecretId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     router.push('/secrets')
